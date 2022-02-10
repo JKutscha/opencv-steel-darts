@@ -2,8 +2,7 @@ __author__ = "Hannes Hoettinger"
 
 # import the necessary packages
 from threading import Thread
-import cv2
-import cv2.cv as cv
+import cv2 as cv
 
 # function call:
 # vs = VideoStream(src=0).start()
