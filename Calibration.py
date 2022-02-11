@@ -337,7 +337,7 @@ def calibrate():
 
             #corrupted file
             except EOFError as err:
-                print err
+                print(err)
 
         else:
             # ToDo: remove manual calibration and adapt system to automatic calibration data
@@ -420,8 +420,8 @@ def calibrate():
 
             cv2.destroyAllWindows()
 
-            print "The dartboard image has now been normalized."
-            print ""
+            print("The dartboard image has now been normalized.")
+            print("")
 
             cv2.imshow(winName4, new_image)
             cv2.setMouseCallback(winName4, on_mouse_new)
@@ -460,7 +460,7 @@ def on_mouse(event, x, y, flags, param):
 
             # append user clicked points
             points.append((x, y))
-            print points
+            print(points)
             cv2.circle(imCalRGB, (x, y), 3,(255, 0, 0),2, 8)
             cv2.imshow(winName3, imCalRGB)
 
@@ -471,7 +471,7 @@ def on_mouse_new(event, x, y, flags, param):
 
             # append user clicked points
             points.append((x, y))
-            print points
+            print(points)
             cv2.circle(new_image, (x, y), 3,(255, 0, 0),2, 8)
             cv2.imshow(winName4, new_image)
         # key.set()
@@ -483,7 +483,7 @@ def on_mouse_rings(event, x, y, flags, param):
 
             # append user clicked points
             points.append((x, y))
-            print points
+            print(points)
             cv2.circle(new_image, (x, y), 3,(255, 0, 0),2, 8)
             cv2.imshow(winName5, new_image)
         # key.set()
@@ -560,7 +560,7 @@ def imagproccalib():
 
         # corrupted file
         except:
-            print "error"
+            print("error")
 
     cv2.imshow("test4", image_proc_img)
 
@@ -761,6 +761,6 @@ class CalibrationData:
 
 
 if __name__ == '__main__':
-    print "Welcome to darts!"
+    print("Welcome to darts!")
     #getTransformation()
     calibrate()

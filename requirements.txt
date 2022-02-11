@@ -1,0 +1,4 @@
+tk
+opencv-python
+matplotlib
+

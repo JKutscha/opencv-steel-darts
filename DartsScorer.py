@@ -1,9 +1,9 @@
 __author__ = "Hannes Hoettinger"
 
-from Tkinter import *
+from tkinter import *
 from Calibration import *
 from GetDart import *
-from thread import *
+from _thread import *
 
 import cv2
 import time
@@ -54,7 +54,7 @@ def GameOn():
 
 def printin(event):
     test = str(eval(e1.get()))
-    print test
+    print(test)
 
 
 # correct dart score with binding -> press return to change
@@ -127,10 +127,10 @@ def start_imag_proc():
 
     #check which player
     if curr_player == 1:
-        print e1.get()
+        print(e1.get())
         score = int(e1.get())
     else:
-        print e2.get()
+        print(e2.get())
         score = int(e2.get())
 
     # save score if score is below 1...
@@ -176,7 +176,7 @@ def start_imag_proc():
 
             # dart outside?
             if corners.size < 40:
-                print "### dart not detected"
+                print("### dart not detected")
                 continue
 
             # filter corners
@@ -197,7 +197,7 @@ def start_imag_proc():
 
             # dart outside?
             if corners_new.size < 30:
-                print "### dart not detected"
+                print("### dart not detected")
                 continue
 
             # find left and rightmost corners
@@ -260,7 +260,7 @@ def start_imag_proc():
                     corners_temp = cornerdata
                     maxloc = np.argmax(corners_temp, axis=0)
                     locationofdart = corners_temp[maxloc]
-                    print "### used different location due to noise!"
+                    print("### used different location due to noise!")
 
                 cv2.circle(testimg, (locationofdart.item(0),locationofdart.item(1)), 10,(255, 255, 255),2, 8)
                 cv2.circle(testimg, (locationofdart.item(0), locationofdart.item(1)), 2, (0, 255, 0), 2, 8)
@@ -271,11 +271,11 @@ def start_imag_proc():
                 dartInfo = DartRegion(dartloc) #cal_image
 
             except:
-                print "Something went wrong in finding the darts location!"
+                print("Something went wrong in finding the darts location!")
                 breaker -= 1
                 continue
 
-            print dartInfo.base, dartInfo.multiplier
+            print(dartInfo.base, dartInfo.multiplier)
 
             if breaker == 1:
                 dart1entry.insert(10,str(dartInfo.base * dartInfo.multiplier))
@@ -333,7 +333,7 @@ def start_imag_proc():
 
     finalentry.insert(10,finalScore)
 
-    print finalScore
+    print(finalScore)
 
 root = Tk()
 
@@ -341,7 +341,7 @@ root = Tk()
 back_gnd = Canvas(root)
 back_gnd.pack(expand=True, fill='both')
 
-back_gnd_image = PhotoImage(file="C:\Users\hanne\OneDrive\Projekte\GitHub\darts\Dartboard.gif")
+back_gnd_image = PhotoImage(file="C:\\Users\hanne\OneDrive\Projekte\GitHub\darts\Dartboard.gif")
 back_gnd.create_image(0, 0, anchor='nw', image=back_gnd_image)
 
 # Create Buttons
