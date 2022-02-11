@@ -18,7 +18,7 @@ from Draw import *
 from VideoCapture import VideoStream
 
 
-DEBUG = False
+DEBUG = True
 
 ring_arr = []
 winName3 = "hsv image colors?"

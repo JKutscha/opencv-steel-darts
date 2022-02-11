@@ -10,7 +10,7 @@ from MathFunctions import *
 from DartsMapping import *
 from Draw import *
 
-DEBUG = False
+DEBUG = True
 
 winName = "test2"
 
@@ -74,7 +74,7 @@ def filterCorners(corners):
 
 
 def filterCornersLine(corners, rows, cols):
-    [vx, vy, x, y] = cv2.fitLine(corners, cv.CV_DIST_HUBER, 0, 0.1, 0.1)
+    [vx, vy, x, y] = cv2.fitLine(corners, cv.DIST_HUBER, 0, 0.1, 0.1)
     lefty = int((-x * vy / vx) + y)
     righty = int(((cols - x) * vy / vx) + y)
 
