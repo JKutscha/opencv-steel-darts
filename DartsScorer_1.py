@@ -1,6 +1,5 @@
-__author__ = "Hannes Hoettinger"
-
-#from Tkinter import *
+from tkinter import *
+from tkinter import ttk
 from Calibration_1 import *
 from DartsRecognition import *
 from _thread import *

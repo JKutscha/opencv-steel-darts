@@ -7,3 +7,8 @@ GUI/darts-linux.zip
 .idea
 .vscode
 *.pkl
+Calibration.py.bak
+DartsRecognition.py.bak
+DartsScorer.py.bak
+GetDart.py.bak
+GetHSV_Values.py.bak

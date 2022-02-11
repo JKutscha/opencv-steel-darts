@@ -150,7 +150,7 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
         thresh_R = getThreshold(cam_R, t_R)
         thresh_L = getThreshold(cam_L, t_L)
 
-        print(cv2.countNonZero(thresh_R))
+        print((cv2.countNonZero(thresh_R)))
         ## threshold important
         if (cv2.countNonZero(thresh_R) > minThres and cv2.countNonZero(thresh_R) < maxThres) \
             or (cv2.countNonZero(thresh_L) > minThres and cv2.countNonZero(thresh_L) < maxThres):
@@ -188,7 +188,7 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
             _, thresh_L = cv2.threshold(blur_L, 60, 255, 0)
 
             # check if it was really a dart
-            print(cv2.countNonZero(thresh_R))
+            print((cv2.countNonZero(thresh_R)))
             if cv2.countNonZero(thresh_R) > maxThres*2 or cv2.countNonZero(thresh_L) > maxThres*2:
                 continue
 
@@ -233,7 +233,7 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
                 else:
                     dartInfo = dartInfo_L
 
-            print(dartInfo.base, dartInfo.multiplier)
+            print((dartInfo.base, dartInfo.multiplier))
 
             if breaker == 1:
                 GUI.dart1entry.insert(10,str(dartInfo.base * dartInfo.multiplier))
