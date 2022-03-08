@@ -259,11 +259,11 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
             t_L = t_plus_L
 
             if playerObj.player == 1:
-                GUI.e1.delete(0,'end')
-                GUI.e1.insert(10,playerObj.score)
+                GUI.playerOneScoreEntry.delete(0, 'end')
+                GUI.playerOneScoreEntry.insert(10, playerObj.score)
             else:
-                GUI.e2.delete(0,'end')
-                GUI.e2.insert(10,playerObj.score)
+                GUI.playerTwoScoreEntry.delete(0, 'end')
+                GUI.playerTwoScoreEntry.insert(10, playerObj.score)
 
             finalScore += (dartInfo.base * dartInfo.multiplier)
 
@@ -287,8 +287,8 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
 
         count += 1
 
-    GUI.finalentry.delete(0, 'end')
-    GUI.finalentry.insert(10,finalScore)
+    GUI.finalEntry.delete(0, 'end')
+    GUI.finalEntry.insert(10, finalScore)
 
     print(finalScore)
 

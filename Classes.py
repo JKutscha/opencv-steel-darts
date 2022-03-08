@@ -1,6 +1,7 @@
 __author__ = "Hannes Hoettinger"
 
 import math
+from tkinter import Entry
 
 DEBUG = True
 
@@ -12,14 +13,10 @@ class Player:
 
 
 class GUIDef:
-    def __init__(self):
-        self.e1 = []
-        self.e2 = []
-        self.dart1entry = []
-        self.dart2entry = []
-        self.dart3entry = []
-        self.finalentry = []
-
+    playerOneScoreEntry:Entry
+    playerTwoScoreEntry:Entry
+    entries = []
+    finalEntry:Entry
 
 class DartDef:
     def __init__(self):
