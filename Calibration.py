@@ -3,11 +3,9 @@ __author__ = "Hannes Hoettinger"
 import math
 import os.path
 import pickle
-
 import cv2
 import numpy as np
-
-from MathFunctions import intersectLineCircle
+from MathFunctions import intersectLineCircle, intersectLines
 from VideoCapture import VideoStream
 
 # visual logging from https://github.com/dchaplinsky/visual-logging
@@ -59,81 +57,6 @@ calibrationComplete = False
 new_image = imCalRGB.copy() # from camera = 480, 640  # from video 1080, 1920
 image_proc_img = imCalRGB.copy()
 imCalRGBorig = imCalRGB.copy()
-
-# line intersection
-def intersectLines(pt1, pt2, ptA, ptB):
-    """ this returns the intersection of Line(pt1,pt2) and Line(ptA,ptB)
-
-        returns a tuple: (xi, yi, valid, r, s), where
-        (xi, yi) is the intersection
-        r is the scalar multiple such that (xi,yi) = pt1 + r*(pt2-pt1)
-        s is the scalar multiple such that (xi,yi) = pt1 + s*(ptB-ptA)
-            valid == 0 if there are 0 or inf. intersections (invalid)
-            valid == 1 if it has a unique intersection ON the segment    """
-
-    DET_TOLERANCE = 0.00000001
-
-    # the first line is pt1 + r*(pt2-pt1)
-    # in component form:
-    x1, y1 = pt1
-    x2, y2 = pt2
-    dx1 = x2 - x1
-    dy1 = y2 - y1
-
-    # the second line is ptA + s*(ptB-ptA)
-    x, y = ptA
-    xB, yB = ptB
-    dx = xB - x
-    dy = yB - y
-
-    DET = (-dx1 * dy + dy1 * dx)
-
-    if math.fabs(DET) < DET_TOLERANCE:
-        return 0, 0
-
-    # now, the determinant should be OK
-    DETinv = 1.0 / DET
-
-    # find the scalar amount along the "self" segment
-    r = DETinv * (-dy * (x - x1) + dx * (y - y1))
-
-    # find the scalar amount along the input line
-    s = DETinv * (-dy1 * (x - x1) + dx1 * (y - y1))
-
-    # return the average of the two descriptions
-    x = (x1 + r * dx1 + x + s * dx) / 2.0
-    y = (y1 + r * dy1 + y + s * dy) / 2.0
-    return x, y
-
-
-def rotate(origin, point, angle):
-    """
-    Rotate a point counterclockwise by a given angle around a given origin.
-
-    The angle should be given in radians.
-    """
-    ox, oy = origin
-    px, py = point
-
-    x = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
-    y = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-    return x, y
-
-
-def segment_intersection(p1, p2, p3, p4):
-    x1 = p1[0]
-    y1 = p1[1]
-    x2 = p2[0]
-    y2 = p2[1]
-    x3 = p3[0]
-    y3 = p3[1]
-    x4 = p4[0]
-    y4 = p4[1]
-    d = ((x1 - x2) * (y3 - y4)) - ((y1 - y2) * (x3 - x4))
-    px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d
-    py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d
-    return px, py
-
 
 def nothing(x):
     pass
