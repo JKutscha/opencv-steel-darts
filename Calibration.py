@@ -1,24 +1,18 @@
 __author__ = "Hannes Hoettinger"
 
-import cv2                   #open cv2
-import cv2.cv as cv          #open cv
-import time
-import numpy as np
-from threading import Thread
-from threading import Event
-import sys
 import math
-import pickle
 import os.path
-from im2figure import *
-from matplotlib import pyplot as plt
-from scipy.stats import gaussian_kde
-from scipy.cluster import vq
-# visual logging from https://github.com/dchaplinsky/visual-logging
-#from logging import FileHandler
-#from vlogging import VisualRecord
-from numpy.linalg import inv
+import pickle
+
+import cv2
+import numpy as np
+
+from MathFunctions import intersectLineCircle
 from VideoCapture import VideoStream
+
+# visual logging from https://github.com/dchaplinsky/visual-logging
+# from logging import FileHandler
+# from vlogging import VisualRecord
 
 #import logging
 
@@ -43,7 +37,6 @@ ring_arr = []
 winName3 = "hsv image colors?"
 winName4 = "Calibration?"
 winName5 = "Choose Ring"
-#imCalRGB = cv2.imread("/Users/Hannes/Desktop/Darts/Dartboard_2.png")
 try:
     cam = VideoStream(src=2).start()
     # frame = vs.read()
@@ -66,35 +59,6 @@ calibrationComplete = False
 new_image = imCalRGB.copy() # from camera = 480, 640  # from video 1080, 1920
 image_proc_img = imCalRGB.copy()
 imCalRGBorig = imCalRGB.copy()
-
-
-def intersectLineCircle(center, radius, p1, p2):
-    baX = p2[0] - p1[0]
-    baY = p2[1] - p1[1]
-    caX = center[0] - p1[0]
-    caY = center[1] - p1[1]
-
-    a = baX * baX + baY * baY
-    bBy2 = baX * caX + baY * caY
-    c = caX * caX + caY * caY - radius * radius
-
-    pBy2 = bBy2 / a
-    q = c / a
-
-    disc = pBy2 * pBy2 - q
-    if disc < 0:
-        return False, None, False, None
-
-    tmpSqrt = math.sqrt(disc)
-    abScalingFactor1 = -pBy2 + tmpSqrt
-    abScalingFactor2 = -pBy2 - tmpSqrt
-
-    pint1 = p1[0] - baX * abScalingFactor1, p1[1] - baY * abScalingFactor1
-    if disc == 0:
-        return True, pint1, False, None
-
-    pint2 = p1[0] - baX * abScalingFactor2, p1[1] - baY * abScalingFactor2
-    return True, pint1, True, pint2
 
 # line intersection
 def intersectLines(pt1, pt2, ptA, ptB):
@@ -234,15 +198,14 @@ def transformation(new_center, tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4):
             int(new_center[1] + 170 * 2 * math.sin((0.5 + i) * sectorangle))), (0, 255, 0), 1)
         i = i + 1
 
-    cv2.circle(new_image, (int(newtop[0]), int(newtop[1])), 2, cv.CV_RGB(255, 255, 0), 2, 4)
-    cv2.circle(new_image, (int(newbottom[0]), int(newbottom[1])), 2, cv.CV_RGB(255, 255, 0), 2, 4)
-    cv2.circle(new_image, (int(newleft[0]), int(newleft[1])), 2, cv.CV_RGB(255, 255, 0), 2, 4)
-    cv2.circle(new_image, (int(newright[0]), int(newright[1])), 2, cv.CV_RGB(255, 255, 0), 2, 4)
+    cv2.circle(new_image, (int(newtop[0]), int(newtop[1])), 2, (255, 255, 0), 2, 4)
+    cv2.circle(new_image, (int(newbottom[0]), int(newbottom[1])), 2, (255, 255, 0), 2, 4)
+    cv2.circle(new_image, (int(newleft[0]), int(newleft[1])), 2, (255, 255, 0), 2, 4)
+    cv2.circle(new_image, (int(newright[0]), int(newright[1])), 2, (255, 255, 0), 2, 4)
 
     cv2.imshow('manipulation', new_image)
 
     return ret
-
 
 def calibrate():
 
@@ -542,9 +505,9 @@ def imagproccalib():
                 a = a/2
                 b = b/2
 
-                cv2.ellipse(image_proc_img, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, cv.CV_RGB(255, 0, 0))
+                cv2.ellipse(image_proc_img, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
 
-                #cv2.circle(image_proc_img, (int(x), int(y-b/2)), 3, cv.CV_RGB(0, 255, 0), 2, 8)
+                #cv2.circle(image_proc_img, (int(x), int(y-b/2)), 3, (0, 255, 0), 2, 8)
 
                 # vertex calculation
                 xb = b * math.cos(angle)
@@ -554,7 +517,7 @@ def imagproccalib():
                 ya = a * math.cos(angle)
 
                 rect = cv2.minAreaRect(cnt)
-                box = cv2.cv.BoxPoints(rect)
+                box = cv2.boxPoints(rect)
                 box = np.int0(box)
                 #cv2.drawContours(image_proc_img, [box], 0, (0, 0, 255), 2)
 
@@ -679,15 +642,15 @@ def imagproccalib():
         line_p1 = M.dot(np.transpose(np.hstack([lin[0], 1])))
         line_p2 = M.dot(np.transpose(np.hstack([lin[1], 1])))
         inter1, inter_p1, inter2, inter_p2 = intersectLineCircle(np.asarray(center_ellipse), circle_radius, np.asarray(line_p1), np.asarray(line_p2))
-        #cv2.line(image_proc_img, (int(line_p1[0]), int(line_p1[1])), (int(line_p2[0]), int(line_p2[1])), cv.CV_RGB(255, 0, 0), 2, 8)
+        #cv2.line(image_proc_img, (int(line_p1[0]), int(line_p1[1])), (int(line_p2[0]), int(line_p2[1])), (255, 0, 0), 2, 8)
         if inter1:
-            #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, cv.CV_RGB(0, 0, 255), 2, 8)
+            #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, (0, 0, 255), 2, 8)
             inter_p1 = M_inv.dot(np.transpose(np.hstack([inter_p1, 1])))
-            #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, cv.CV_RGB(0, 0, 255), 2, 8)
+            #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, (0, 0, 255), 2, 8)
             if inter2:
-                #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, cv.CV_RGB(0, 0, 255), 2, 8)
+                #cv2.circle(image_proc_img, (int(inter_p1[0]), int(inter_p1[1])), 3, (0, 0, 255), 2, 8)
                 inter_p2 = M_inv.dot(np.transpose(np.hstack([inter_p2, 1])))
-                #cv2.circle(image_proc_img, (int(inter_p2[0]), int(inter_p2[1])), 3, cv.CV_RGB(0, 0, 255), 2, 8)
+                #cv2.circle(image_proc_img, (int(inter_p2[0]), int(inter_p2[1])), 3, (0, 0, 255), 2, 8)
                 intersectp_s.append(inter_p1)
                 intersectp_s.append(inter_p2)
 
@@ -720,16 +683,16 @@ def imagproccalib():
     #points.append(intersectp_s[2])  # left
     #points.append(intersectp_s[3])  # right
 
-    cv2.circle(image_proc_img, (int(points[0][0]), int(points[0][1])), 3, cv.CV_RGB(255, 0, 0), 2, 8)
-    cv2.circle(image_proc_img, (int(points[1][0]), int(points[1][1])), 3, cv.CV_RGB(255, 0, 0), 2, 8)
-    cv2.circle(image_proc_img, (int(points[2][0]), int(points[2][1])), 3, cv.CV_RGB(255, 0, 0), 2, 8)
-    cv2.circle(image_proc_img, (int(points[3][0]), int(points[3][1])), 3, cv.CV_RGB(255, 0, 0), 2, 8)
+    cv2.circle(image_proc_img, (int(points[0][0]), int(points[0][1])), 3, (255, 0, 0), 2, 8)
+    cv2.circle(image_proc_img, (int(points[1][0]), int(points[1][1])), 3, (255, 0, 0), 2, 8)
+    cv2.circle(image_proc_img, (int(points[2][0]), int(points[2][1])), 3, (255, 0, 0), 2, 8)
+    cv2.circle(image_proc_img, (int(points[3][0]), int(points[3][1])), 3, (255, 0, 0), 2, 8)
 
     ## ellipse vertices
-    #cv2.circle(image_proc_img, (int(ellipse_vertices[0][0]), int(ellipse_vertices[0][1])), 3, cv.CV_RGB(255, 0, 255), 2, 8)
-    #cv2.circle(image_proc_img, (int(ellipse_vertices[1][0]), int(ellipse_vertices[1][1])), 3, cv.CV_RGB(255, 0, 255), 2, 8)
-    #cv2.circle(image_proc_img, (int(ellipse_vertices[2][0]), int(ellipse_vertices[2][1])), 3, cv.CV_RGB(255, 0, 255), 2, 8)
-    #cv2.circle(image_proc_img, (int(ellipse_vertices[3][0]), int(ellipse_vertices[3][1])), 3, cv.CV_RGB(255, 0, 255), 2, 8)
+    #cv2.circle(image_proc_img, (int(ellipse_vertices[0][0]), int(ellipse_vertices[0][1])), 3, (255, 0, 255), 2, 8)
+    #cv2.circle(image_proc_img, (int(ellipse_vertices[1][0]), int(ellipse_vertices[1][1])), 3, (255, 0, 255), 2, 8)
+    #cv2.circle(image_proc_img, (int(ellipse_vertices[2][0]), int(ellipse_vertices[2][1])), 3, (255, 0, 255), 2, 8)
+    #cv2.circle(image_proc_img, (int(ellipse_vertices[3][0]), int(ellipse_vertices[3][1])), 3, (255, 0, 255), 2, 8)
 
     rotated_rect.append((box[1], box[2]))
     rotated_rect.append((box[2], box[3]))

@@ -1,9 +1,3 @@
-__author__ = "Hannes Hoettinger"
-
-import numpy as np
-import cv2
-import math
-import pickle
 from Classes import *
 
 DEBUG = True

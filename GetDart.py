@@ -3,7 +3,6 @@ __author__ = "Hannes Hoettinger"
 import numpy as np
 import cv2
 import time
-import cv2.cv as cv
 import math
 import pickle
 

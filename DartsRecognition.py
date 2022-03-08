@@ -124,16 +124,12 @@ def getRealLocation(corners_final, mount):
 
 
 def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
-
     finalScore = 0
     count = 0
-    breaker = 0
+    dartCount = 0
     ## threshold important -> make accessible
-    minThres = 2000/2
-    maxThres = 15000/2
-
-    # save score if score is below 1...
-    old_score = playerObj.score
+    minThreshold = 1000
+    maxThreshold = 7500
 
     # Read first image twice (issue somewhere) to start loop:
     _, _ = cam2gray(cam_R)
@@ -147,13 +143,13 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
         # wait for camera
         time.sleep(0.1)
         # check if dart hit the board
-        thresh_R = getThreshold(cam_R, t_R)
-        thresh_L = getThreshold(cam_L, t_L)
+        thresholdRightCamera = getThreshold(cam_R, t_R)
+        thresholdLeftCamera = getThreshold(cam_L, t_L)
 
-        print((cv2.countNonZero(thresh_R)))
+        print((cv2.countNonZero(thresholdRightCamera)))
         ## threshold important
-        if (cv2.countNonZero(thresh_R) > minThres and cv2.countNonZero(thresh_R) < maxThres) \
-            or (cv2.countNonZero(thresh_L) > minThres and cv2.countNonZero(thresh_L) < maxThres):
+        if (minThreshold < cv2.countNonZero(thresholdRightCamera) < maxThreshold) \
+            or (minThreshold < cv2.countNonZero(thresholdLeftCamera) < maxThreshold):
             # wait for camera vibrations
             time.sleep(0.2)
             # filter noise
@@ -184,66 +180,66 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
             corners_final_R = filterCornersLine(corners_f_R, rows, cols)
             corners_final_L = filterCornersLine(corners_f_L, rows, cols)
 
-            _, thresh_R = cv2.threshold(blur_R, 60, 255, 0)
-            _, thresh_L = cv2.threshold(blur_L, 60, 255, 0)
+            _, thresholdRightCamera = cv2.threshold(blur_R, 60, 255, 0)
+            _, thresholdLeftCamera = cv2.threshold(blur_L, 60, 255, 0)
 
             # check if it was really a dart
-            print((cv2.countNonZero(thresh_R)))
-            if cv2.countNonZero(thresh_R) > maxThres*2 or cv2.countNonZero(thresh_L) > maxThres*2:
+            print((cv2.countNonZero(thresholdRightCamera)))
+            if cv2.countNonZero(thresholdRightCamera) > maxThreshold*2 or cv2.countNonZero(thresholdLeftCamera) > maxThreshold*2:
                 continue
 
             print("Dart detected")
             # dart was found -> increase counter
-            breaker += 1
+            dartCount += 1
 
             dartInfo = DartDef()
 
             # get final darts location
             try:
-                dartInfo_R = DartDef()
-                dartInfo_L = DartDef()
+                dartInformationRight = DartDef()
+                dartInformationLeft = DartDef()
 
-                dartInfo_R.corners = corners_final_R.size
-                dartInfo_L.corners = corners_final_L.size
+                dartInformationRight.corners = corners_final_R.size
+                dartInformationLeft.corners = corners_final_L.size
 
-                locationofdart_R = getRealLocation(corners_final_R, "right")
-                locationofdart_L = getRealLocation(corners_final_L, "left")
+                dartLocationRightCamera = getRealLocation(corners_final_R, "right")
+                dartLocationLeftCamera = getRealLocation(corners_final_L, "left")
 
                 # check for the location of the dart with the calibration
-                dartloc_R = getTransformedLocation(locationofdart_R.item(0), locationofdart_R.item(1), calData_R)
-                dartloc_L = getTransformedLocation(locationofdart_L.item(0), locationofdart_L.item(1), calData_L)
+                dartloc_R = getTransformedLocation(dartLocationRightCamera.item(0), dartLocationRightCamera.item(1), calData_R)
+                dartloc_L = getTransformedLocation(dartLocationLeftCamera.item(0), dartLocationLeftCamera.item(1), calData_L)
                 # detect region and score
-                dartInfo_R = getDartRegion(dartloc_R, calData_R)
-                dartInfo_L = getDartRegion(dartloc_L, calData_L)
+                dartInformationRight = getDartRegion(dartloc_R, calData_R)
+                dartInformationLeft = getDartRegion(dartloc_L, calData_L)
 
-                cv2.circle(testimg, (locationofdart_R.item(0), locationofdart_R.item(1)), 10, (255, 255, 255), 2, 8)
-                cv2.circle(testimg, (locationofdart_R.item(0), locationofdart_R.item(1)), 2, (0, 255, 0), 2, 8)
+                cv2.circle(testimg, (dartLocationRightCamera.item(0), dartLocationRightCamera.item(1)), 10, (255, 255, 255), 2, 8)
+                cv2.circle(testimg, (dartLocationRightCamera.item(0), dartLocationRightCamera.item(1)), 2, (0, 255, 0), 2, 8)
             except:
                 print("Something went wrong in finding the darts location!")
-                breaker -= 1
+                dartCount -= 1
                 continue
 
             # "merge" scores
-            if dartInfo_R.base == dartInfo_L.base and dartInfo_R.multiplier == dartInfo_L.multiplier:
-                dartInfo = dartInfo_R
+            if dartInformationRight.base == dartInformationLeft.base and dartInformationRight.multiplier == dartInformationLeft.multiplier:
+                dartInfo = dartInformationRight
             # use the score of the image with more corners
             else:
-                if dartInfo_R.corners > dartInfo_L.corners:
-                    dartInfo = dartInfo_R
+                if dartInformationRight.corners > dartInformationLeft.corners:
+                    dartInfo = dartInformationRight
                 else:
-                    dartInfo = dartInfo_L
+                    dartInfo = dartInformationLeft
 
             print((dartInfo.base, dartInfo.multiplier))
 
-            if breaker == 1:
+            if dartCount == 1:
                 GUI.dart1entry.insert(10,str(dartInfo.base * dartInfo.multiplier))
                 dart = int(GUI.dart1entry.get())
                 cv2.imwrite("frame2.jpg", testimg)     # save dart1 frame
-            elif breaker == 2:
+            elif dartCount == 2:
                 GUI.dart2entry.insert(10,str(dartInfo.base * dartInfo.multiplier))
                 dart = int(GUI.dart2entry.get())
                 cv2.imwrite("frame3.jpg", testimg)     # save dart2 frame
-            elif breaker == 3:
+            elif dartCount == 3:
                 GUI.dart3entry.insert(10,str(dartInfo.base * dartInfo.multiplier))
                 dart = int(GUI.dart3entry.get())
                 cv2.imwrite("frame4.jpg", testimg)     # save dart3 frame
@@ -252,10 +248,11 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
 
             if playerObj.score == 0 and dartInfo.multiplier == 2:
                 playerObj.score = 0
-                breaker = 3
+                dartCount = 3
             elif playerObj.score <= 1:
-                playerObj.score = old_score
-                breaker = 3
+                # over thrown, reset score
+                playerObj.score += dart
+                dartCount = 3
 
             # save new diff img for next dart
             t_R = t_plus_R
@@ -270,17 +267,17 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
 
             finalScore += (dartInfo.base * dartInfo.multiplier)
 
-            if breaker == 3:
+            if dartCount == 3:
                 break
 
             #cv2.imshow(winName, tnow)
 
         # missed dart
-        elif cv2.countNonZero(thresh_R) < maxThres/2 or cv2.countNonZero(thresh_L) < maxThres/2:
+        elif cv2.countNonZero(thresholdRightCamera) < maxThreshold/2 or cv2.countNonZero(thresholdLeftCamera) < maxThreshold/2:
             continue
 
         # if player enters zone - break loop
-        elif cv2.countNonZero(thresh_R) > maxThres/2 or cv2.countNonZero(thresh_L) > maxThres/2:
+        elif cv2.countNonZero(thresholdRightCamera) > maxThreshold/2 or cv2.countNonZero(thresholdLeftCamera) > maxThreshold/2:
             break
 
         key = cv2.waitKey(10)
@@ -301,7 +298,7 @@ if __name__ == '__main__':
     img = cv2.imread("./Dartboard_2.png")
     img2 = cv2.imread("./Dartboard_3.png")
 
-    vidcap = cv2.VideoCapture("./Darts_Testvideo_9_1.mp4")
+    video = cv2.VideoCapture("./Darts_Testvideo_9_1.mp4")
     from_video = True
 
 # if DEBUG:

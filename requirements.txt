@@ -1,4 +1,6 @@
 tk
-opencv-python
-matplotlib
+opencv-python~=4.5.5.62
+matplotlib~=3.5.1
 
+
+numpy~=1.22.3

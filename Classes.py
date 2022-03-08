@@ -1,10 +1,8 @@
 __author__ = "Hannes Hoettinger"
 
 import math
-import cv2 as cv
 
 DEBUG = True
-
 
 class Player:
     def __init__(self):
