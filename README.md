@@ -40,7 +40,10 @@ The lines are found using HoughLines and then filtered in a specific angle range
 
 Image Pre-processing:
 ```python
-imCalHSV = cv2.cvtColor(image_proc_img, cv2.COLOR_BGR2HSV)
+import cv2
+import numpy as np
+
+imCalHSV = ""# imCalHSV = cv2.cvtColor(image_proc_img, cv2.COLOR_BGR2HSV)
 kernel = np.ones((5, 5), np.float32) / 25
 blur = cv2.filter2D(imCalHSV, -1, kernel)
 h, s, imCal = cv2.split(blur)
@@ -51,7 +54,7 @@ ret, thresh = cv2.threshold(imCal, 140, 255, cv2.THRESH_BINARY_INV)
 kernel = np.ones((5, 5), np.uint8)
 thresh2 = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE,kernel)
 # find enclosing ellipse
-Ellipse, image_proc_img = findEllipse(thresh2,image_proc_img)
+# Ellipse, image_proc_img = findEllipse(thresh2,"image_proc_img")
 ```
 
 
