@@ -151,29 +151,31 @@ def createFinalField(canvas:Canvas, gui:GUIDef):
     gui.finalEntry = Entry(root, font="Helvetica 20 bold", width=3)
     canvas.create_window(350, 310, window=gui.finalEntry, anchor='nw')
 
-GUI = GUIDef()
-cam_R = VideoStream(src=2).start()
-cam_L = VideoStream(src=3).start()
 
-dartScorer = DartsScorer(cam_R, cam_L)
+if __name__ == '__main__':
+    GUI = GUIDef()
+    cam_R = VideoStream(src=2).start()
+    cam_L = VideoStream(src=3).start()
 
-root = Tk("OpenCV Dart")
+    dartScorer = DartsScorer(cam_R, cam_L)
 
-player = Player()
+    root = Tk("OpenCV Dart")
 
-backgroundCanvas = createBackground()
-createBackground()
-createButtons()
+    player = Player()
 
-createPlayerNameField(backgroundCanvas, "Player 1", 250, 20)
-createPlayerNameField(backgroundCanvas, "Player 2", 400, 20)
-GUI.playerOneScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 250, 80)
-GUI.playerTwoScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 400, 80)
+    backgroundCanvas = createBackground()
+    createBackground()
+    createButtons()
 
-createDartFields()
+    createPlayerNameField(backgroundCanvas, "Player 1", 250, 20)
+    createPlayerNameField(backgroundCanvas, "Player 2", 400, 20)
+    GUI.playerOneScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 250, 80)
+    GUI.playerTwoScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 400, 80)
 
-createFinalField(backgroundCanvas, GUI)
+    createDartFields()
 
-app = Application(master=root)
-app.mainloop()
-root.destroy()
+    createFinalField(backgroundCanvas, GUI)
+
+    app = Application(master=root)
+    app.mainloop()
+    root.destroy()

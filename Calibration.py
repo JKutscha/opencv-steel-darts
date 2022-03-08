@@ -215,7 +215,7 @@ def findSectorLines(edged, image_proc_img, angleZone1, angleZone2):
                     else:
                         diff = 0
 
-                    if diff < 200 and diff is not 0:
+                    if diff < 200 and diff != 0:
                         continue
 
                     cv2.line(image_proc_img, (x1, y1), (x2, y2), (255, 0, 0), 1)

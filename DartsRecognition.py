@@ -295,10 +295,10 @@ def getDarts(cam_R, cam_L, calData_R, calData_L, playerObj, GUI):
 
 if __name__ == '__main__':
     print("Welcome to darts!")
-    img = cv2.imread("./Dartboard_2.png")
-    img2 = cv2.imread("./Dartboard_3.png")
+    #img = cv2.imread("Dartboard_2.png")
+    #img2 = cv2.imread("Dartboard_3.png")
 
-    video = cv2.VideoCapture("./Darts_Testvideo_9_1.mp4")
+    video = cv2.VideoCapture("Darts/Darts_Testvideo_9_1.mp4")
     from_video = True
 
 # if DEBUG:
