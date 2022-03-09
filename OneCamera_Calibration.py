@@ -1,4 +1,4 @@
-__author__ = "Hannes Hoettinger"
+"""__author__ = "Hannes Hoettinger"
 
 import math
 import os.path
@@ -650,3 +650,4 @@ if __name__ == '__main__':
     print("Welcome to darts!")
     #getTransformation()
     calibrate()
+"""
