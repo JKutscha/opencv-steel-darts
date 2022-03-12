@@ -134,16 +134,16 @@ def createDartLabel(labelText:str, dartNumber:int, canvas:Canvas, offset:int):
     label = Label(None, text=labelText, font="Helvetica 20 bold")
     canvas.create_window(300, 160 + dartNumber * offset, window=label, anchor='nw')
 
-def createDartEntryField(gui:GUIDef, dartNumber:int, canvas:Canvas, offset:int):
+def createDartEntryField(gui:GUIDef, dartScorer:DartsScorer, dartNumber:int, canvas:Canvas, offset:int):
     gui.entries[dartNumber] = Entry(root, font="Helvetica 20 bold", width=3)
     gui.entries[dartNumber].bind("<Return>", dartScorer.correctLastDart())
     canvas.create_window(350, 160 + dartNumber * offset, window=gui.entries[dartNumber], anchor='nw')
 
-def createDartFields():
+def createDartFields(gui:GUIDef, dartScorer:DartsScorer):
     yOffset: int = 50
     for dartNumber in range(3):
         createDartLabel(str(dartNumber + 1) + ".: ", dartNumber, canvas=backgroundCanvas, offset=yOffset)
-        createDartEntryField(GUI, dartNumber, canvas=backgroundCanvas, offset=yOffset)
+        createDartEntryField(gui, dartScorer, dartNumber, canvas=backgroundCanvas, offset=yOffset)
 
 def createFinalField(canvas:Canvas, gui:GUIDef):
     label = Label(None, text=" = ", font="Helvetica 20 bold")
@@ -153,29 +153,39 @@ def createFinalField(canvas:Canvas, gui:GUIDef):
 
 
 if __name__ == '__main__':
-    GUI = GUIDef()
+    root = Tk("OpenCV Dart")
+    background = Canvas(root)
+    background.pack(expand=True, fill='both')
+    backgroundImage = PhotoImage(file="./Dartboard.gif")
+    background.create_image(0, 0, anchor='nw', image=backgroundImage)
+
+    for src in range(10):
+        cam_R = VideoStream(camID=src)
+
+    exit(0)
+    """GUI = GUIDef()
     cam_R = VideoStream(src=2).start()
     cam_L = VideoStream(src=3).start()
 
     dartScorer = DartsScorer(cam_R, cam_L)
 
-    root = Tk("OpenCV Dart")
 
-    player = Player()
+    # player = Player()
 
     backgroundCanvas = createBackground()
     createBackground()
-    createButtons()
+    # createButtons()
 
-    createPlayerNameField(backgroundCanvas, "Player 1", 250, 20)
-    createPlayerNameField(backgroundCanvas, "Player 2", 400, 20)
-    GUI.playerOneScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 250, 80)
-    GUI.playerTwoScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 400, 80)
+    # createPlayerNameField(backgroundCanvas, "Player 1", 250, 20)
+    # createPlayerNameField(backgroundCanvas, "Player 2", 400, 20)
+    # GUI.playerOneScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 250, 80)
+    # GUI.playerTwoScoreEntry = createPlayerScoreField(backgroundCanvas, dartScorer.startScore, 400, 80)
 
-    createDartFields()
+    # createDartFields(GUI)
 
-    createFinalField(backgroundCanvas, GUI)
+    # createFinalField(backgroundCanvas, GUI)
 
+    """
     app = Application(master=root)
     app.mainloop()
     root.destroy()

@@ -368,8 +368,9 @@ def calibrate(cam_R, cam_L):
         success, imCalRGB_R = cam_R.read()
         _, imCalRGB_L = cam_L.read()
 
-    except:
+    except BaseException as exception:
         print("Could not init cams")
+        print(exception.__cause__)
         return
 
     imCal_R = imCalRGB_R.copy()
@@ -383,7 +384,7 @@ def calibrate(cam_R, cam_L):
     global calibrationComplete
     calibrationComplete = False
 
-    while calibrationComplete == False:
+    while not calibrationComplete:
         #Read calibration file, if exists
         if os.path.isfile("calibrationData_R.pkl"):
             try:
@@ -485,7 +486,7 @@ def calibrate(cam_R, cam_L):
 if __name__ == '__main__':
     print("Welcome to darts!")
 
-    cam_R = VideoStream(src=2).start()
-    cam_L = VideoStream(src=3).start()
+    cam_R = VideoStream(camID=2).start()
+    cam_L = VideoStream(camID=3).start()
 
     calibrate(cam_R, cam_L)

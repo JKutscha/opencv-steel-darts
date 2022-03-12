@@ -1,41 +1,43 @@
-__author__ = "Hannes Hoettinger"
-
-# import the necessary packages
 from threading import Thread
-import cv2 as cv
+import cv2
 
-# function call:
-#vs = VideoStream(src=0).start()
-#frame = vs.read()
+DEBUG = False
 
-
-class VideoStream:
-    def __init__(self, src=0):
+class VideoStream(Thread):
+    def __init__(self, camName:str,camID=0):
+        Thread.__init__(self)
         # initialize the video camera stream and read the first frame
         # from the stream
-        self.stream = cv.VideoCapture(src)
-        self.stream.set(cv.CAP_PROP_FRAME_WIDTH, 800)
-        self.stream.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
-        (self.grabbed, self.frame) = self.stream.read()
+        self.grabbed = False
+        self.frame = None
+        self.camID = camID
+        self.camName = camName
+        self.stream = cv2.VideoCapture(self.camID)
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 
         # initialize the variable used to indicate if the thread should
         # be stopped
         self.stopped = False
 
-    def start(self):
-        # start the thread to read frames from the video stream
-        Thread(target=self.update, args=()).start()
-        return self
+    def run(self):
+        print ("Starting " + self.camName)
+        if self.stream.isOpened():
+            self.grabbed, self.frame = self.stream.read()
+            if DEBUG:
+                self.initCamPreview()
+            # keep looping infinitely until the thread is stopped
+            self.update()
 
     def update(self):
-        # keep looping infinitely until the thread is stopped
-        while True:
-            # if the thread indicator variable is set, stop the thread
-            if self.stopped:
-                return
-
+        while not self.stopped:
             # otherwise, read the next frame from the stream
-            (self.grabbed, self.frame) = self.stream.read()
+            self.grabbed, self.frame = self.stream.read()
+            if DEBUG:
+                cv2.imshow(self.camName, self.frame)
+                key = cv2.waitKey(20)
+                if key == 27:  # exit on ESC
+                    self.stop()
 
     def read(self):
         # return the frame most recently read
@@ -44,3 +46,16 @@ class VideoStream:
     def stop(self):
         # indicate that the thread should be stopped
         self.stopped = True
+        if DEBUG:
+            cv2.destroyWindow(self.camName)
+
+    def initCamPreview(self):
+        cv2.namedWindow(self.camName)
+
+if __name__ == '__main__':
+    DEBUG = True
+    # test cams
+    thread1 = VideoStream("Camera 1", 1)
+    thread2 = VideoStream("Camera 2", 2)
+    thread1.start()
+    thread2.start()
