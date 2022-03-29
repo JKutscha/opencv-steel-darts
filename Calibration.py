@@ -227,6 +227,7 @@ def findSectorLines(edged, image_proc_img, angleZone1, angleZone2):
                         continue
 
                     intersectp.append((intersectpx, intersectpy))
+                    print("Was here")
 
                     lines_seg.append([(x1, y1), (x2, y2)])
                     lines_seg.append([(x3, y3), (x4, y4)])
@@ -299,6 +300,8 @@ def getTransformationPoints(image_proc_img, mount):
     kernel = np.ones((5, 5), np.uint8)
     thresh2 = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("thresh2", thresh2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # find enclosing ellipse
     Ellipse, image_proc_img = findEllipse(thresh2, image_proc_img)
@@ -306,17 +309,22 @@ def getTransformationPoints(image_proc_img, mount):
     # return the edged image
     edged = autocanny(thresh2)  # imCal
     cv2.imshow("test", edged)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # find 2 sector lines -> horizontal and vertical sector line -> make angles accessible? with slider?
-    if mount == "right":
+
+    if mount != "right":
         angleZone1 = (Ellipse.angle - 5, Ellipse.angle + 5)
         angleZone2 = (Ellipse.angle - 100, Ellipse.angle - 80)
         lines_seg, image_proc_img = findSectorLines(edged, image_proc_img, angleZone1, angleZone2)
     else:
         lines_seg, image_proc_img = findSectorLines(edged, image_proc_img, angleZone1=(80, 120), angleZone2=(30, 40))
 
-    cv2.imshow("test4", image_proc_img)
-
+    cv2.imshow(mount, image_proc_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    exit(0)
     # ellipse 2 circle transformation to find intersection points -> source points for transformation
     M = ellipse2circle(Ellipse)
     intersectp_s = getEllipseLineIntersection(Ellipse, M, lines_seg)
@@ -362,8 +370,7 @@ def getTransformationPoints(image_proc_img, mount):
         return source_points
 
 
-def calibrate(cam_R, cam_L):
-
+def calibrateWithCameras(cam_R, cam_L):
     try:
         success, imCalRGB_R = cam_R.read()
         _, imCalRGB_L = cam_L.read()
@@ -372,7 +379,9 @@ def calibrate(cam_R, cam_L):
         print("Could not init cams")
         print(exception.__cause__)
         return
+    calibrate(imCalRGB_R, imCalRGB_L)
 
+def calibrate(imCalRGB_R, imCalRGB_L):
     imCal_R = imCalRGB_R.copy()
     imCal_L = imCalRGB_L.copy()
 
@@ -427,7 +436,8 @@ def calibrate(cam_R, cam_L):
                     os.remove("calibrationData_R.pkl")
                     os.remove("calibrationData_L.pkl")
                     #restart calibration
-                    calibrate(cam_R, cam_L)
+                    # calibrate(cam_R, cam_L)
+                    print("restartWasHere")
 
             #corrupted file
             except EOFError as err:
@@ -484,9 +494,9 @@ def calibrate(cam_R, cam_L):
 
 
 if __name__ == '__main__':
-    print("Welcome to darts!")
-
-    cam_R = VideoStream(camID=2).start()
-    cam_L = VideoStream(camID=3).start()
-
-    calibrate(cam_R, cam_L)
+    print("Debug calibration")
+    left = cv2.imread('./calibrationDebug/leftSidePink.png')
+    left0 = cv2.imread('./calibrationDebug/leftTest1.png')
+    # right = cv2.imread('./calibrationDebug/rightSidePink.png')
+    right = cv2.imread('./calibrationDebug/img.png')
+    calibrate(right,left)

@@ -1,5 +1,6 @@
 from threading import Thread
 import cv2
+import time
 
 DEBUG = False
 
@@ -34,7 +35,8 @@ class VideoStream(Thread):
             # otherwise, read the next frame from the stream
             self.grabbed, self.frame = self.stream.read()
             if DEBUG:
-                cv2.imshow(self.camName, self.frame)
+                if self.grabbed:
+                    cv2.imshow(self.camName, self.frame)
                 key = cv2.waitKey(20)
                 if key == 27:  # exit on ESC
                     self.stop()
@@ -55,7 +57,7 @@ class VideoStream(Thread):
 if __name__ == '__main__':
     DEBUG = True
     # test cams
-    thread1 = VideoStream("Camera 1", 1)
+    thread1 = VideoStream("Camera 1", 0)
     thread2 = VideoStream("Camera 2", 2)
     thread1.start()
     thread2.start()
