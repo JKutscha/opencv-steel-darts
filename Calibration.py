@@ -370,23 +370,6 @@ def getTransformationPoints(image_proc_img, mount):
         return source_points
 
 
-def calibrateWithCameras(cam_R, cam_L):
-    success = False
-    try:
-        success, imCalRGB_R = cam_R.read()
-        _, imCalRGB_L = cam_L.read()
-        print("calibrateWithCams was:")
-        print(success)
-
-    except BaseException as exception:
-        print("Could not init cams")
-        print(exception.__cause__)
-        return
-    if not success:
-        imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
-        imCalRGB_R = cv2.imread('./calibrationDebug/img.png')
-    calibrate(imCalRGB_R, imCalRGB_L)
-
 def calibrate(imCalRGB_R, imCalRGB_L):
     imCal_R = imCalRGB_R.copy()
     imCal_L = imCalRGB_L.copy()
@@ -498,11 +481,28 @@ def calibrate(imCalRGB_R, imCalRGB_L):
 
     cv2.destroyAllWindows()
 
+def calibrateWithCameras(cam_R, cam_L):
+    success = False
+    try:
+        success, imCalRGB_R = cam_R.read()
+        _, imCalRGB_L = cam_L.read()
+        print("calibrateWithCams was:")
+        print(success)
+
+    except BaseException as exception:
+        print("Could not init cams")
+        print(exception.__cause__)
+        return
+    if not success:
+        imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
+        imCalRGB_R = cv2.imread('./calibrationDebug/img.png')
+    calibrate(imCalRGB_R, imCalRGB_L)
 
 if __name__ == '__main__':
     print("Debug calibration")
-    left = cv2.imread('./calibrationDebug/leftSidePink.png')
-    left0 = cv2.imread('./calibrationDebug/leftTest1.png')
-    # right = cv2.imread('./calibrationDebug/rightSidePink.png')
-    right = cv2.imread('./calibrationDebug/img.png')
-    calibrate(right,left)
+    cam1 = VideoStream("Raspi Cam", 0)
+    cam2 = VideoStream("WebCam", 1)
+    cam1.start()
+    cam2.start()
+
+    calibrateWithCameras(cam1,cam2)
