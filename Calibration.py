@@ -484,8 +484,9 @@ def calibrate(imCalRGB_R, imCalRGB_L):
 def calibrateWithCameras(cam_R, cam_L):
     success = False
     try:
-        success, imCalRGB_R = cam_R.read()
-        _, imCalRGB_L = cam_L.read()
+        for i in range(10):
+            success, imCalRGB_R = cam_R.read()
+            camSuccess, imCalRGB_L = cam_L.read()
         print("calibrateWithCams was:")
         print(success)
 
@@ -493,16 +494,28 @@ def calibrateWithCameras(cam_R, cam_L):
         print("Could not init cams")
         print(exception.__cause__)
         return
+    
     if not success:
-        imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
         imCalRGB_R = cv2.imread('./calibrationDebug/img.png')
+        print("backup right")
+    if not camSuccess:
+        imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
+        print("backup left")
     calibrate(imCalRGB_R, imCalRGB_L)
 
 if __name__ == '__main__':
     print("Debug calibration")
-    cam1 = VideoStream("Raspi Cam", 0)
-    cam2 = VideoStream("WebCam", 1)
+    cam2 = VideoStream("Raspi Cam", 0)
+    cam1 = VideoStream("WebCam", 1)
     cam1.start()
     cam2.start()
-
+    cv2.namedWindow(cam1.camName)
+    while True:
+        grabed, img = cam1.read()
+        if grabed:
+                    cv2.imshow(cam1.camName, img)
+        key = cv2.waitKey(20)
+        if key == 27:  # exit on ESC
+            cv2.destroyAllWindows()
+            break
     calibrateWithCameras(cam1,cam2)
