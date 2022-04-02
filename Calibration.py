@@ -371,14 +371,20 @@ def getTransformationPoints(image_proc_img, mount):
 
 
 def calibrateWithCameras(cam_R, cam_L):
+    success = False
     try:
         success, imCalRGB_R = cam_R.read()
         _, imCalRGB_L = cam_L.read()
+        print("calibrateWithCams was:")
+        print(success)
 
     except BaseException as exception:
         print("Could not init cams")
         print(exception.__cause__)
         return
+    if not success:
+        imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
+        imCalRGB_R = cv2.imread('./calibrationDebug/img.png')
     calibrate(imCalRGB_R, imCalRGB_L)
 
 def calibrate(imCalRGB_R, imCalRGB_L):
