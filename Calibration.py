@@ -17,6 +17,11 @@ from Classes import *
 from Draw import *
 from VideoCapture import VideoStream
 
+LEFT_CALIBRATION_DATA = 'calibrationData_L.pkl'
+
+RIGHT_CALIBRATION_DATA = 'calibrationData_R.pkl'
+
+CALIBRATION_FILE = "calibrationData_R.pkl"
 
 DEBUG = False
 
@@ -284,7 +289,7 @@ def getEllipseLineIntersection(Ellipse, M, lines_seg):
     return intersectp_s
 
 
-def getTransformationPoints(image_proc_img, mount):
+def getTransformationPoints(image_proc_img, isRightCam: bool):
 
     imCalHSV = cv2.cvtColor(image_proc_img, cv2.COLOR_BGR2HSV)
     kernel = np.ones((5, 5), np.float32) / 25
@@ -314,12 +319,12 @@ def getTransformationPoints(image_proc_img, mount):
 
     # find 2 sector lines -> horizontal and vertical sector line -> make angles accessible? with slider?
 
-    if mount != "right":
+    if isRightCam:
+        lines_seg, image_proc_img = findSectorLines(edged, image_proc_img, angleZone1=(80, 120), angleZone2=(30, 40))
+    else:
         angleZone1 = (Ellipse.angle - 5, Ellipse.angle + 5)
         angleZone2 = (Ellipse.angle - 100, Ellipse.angle - 80)
         lines_seg, image_proc_img = findSectorLines(edged, image_proc_img, angleZone1, angleZone2)
-    else:
-        lines_seg, image_proc_img = findSectorLines(edged, image_proc_img, angleZone1=(80, 120), angleZone2=(30, 40))
 
     cv2.imshow(mount, image_proc_img)
     cv2.waitKey(0)
@@ -344,7 +349,7 @@ def getTransformationPoints(image_proc_img, mount):
         pointarray = np.array(intersectp_s)
         top_idx = [np.argmin(pointarray[:, 1])][0]
         bot_idx = [np.argmax(pointarray[:, 1])][0]
-        if mount == "right":
+        if isRightCam:
             left_idx = [np.argmin(pointarray[:, 0])][0]
             right_idx = [np.argmax(pointarray[:, 0])][0]
         else:
@@ -369,120 +374,88 @@ def getTransformationPoints(image_proc_img, mount):
         cv2.destroyAllWindows()
         return source_points
 
+def getCalibrationFile(isRightCalibration: bool):
+    if isRightCalibration:
+        return RIGHT_CALIBRATION_DATA
+    return LEFT_CALIBRATION_DATA
 
-def calibrate(imCalRGB_R, imCalRGB_L):
-    imCal_R = imCalRGB_R.copy()
-    imCal_L = imCalRGB_L.copy()
 
-    imCalRGBorig = imCalRGB_R.copy()
-
-    cv2.imwrite("frame1_R.jpg", imCalRGB_R)     # save calibration frame
-    cv2.imwrite("frame1_L.jpg", imCalRGB_L)  # save calibration frame
-
-    global calibrationComplete
+def calibrate(camName:str, cam: VideoStream, isRightCalibration: bool):
+    _, calibrationImage = cam.read()
+    cv2.imwrite(camName + "Calibration.jpg", calibrationImage) # save calibration frame
     calibrationComplete = False
-
-    while not calibrationComplete:
-        #Read calibration file, if exists
-        if os.path.isfile("calibrationData_R.pkl"):
-            try:
-                calFile = open('calibrationData_R.pkl', 'rb')
-                calData_R = CalibrationData()
-                calData_R = pickle.load(calFile)
-                calFile.close()
-
-                calFile = open('calibrationData_L.pkl', 'rb')
-                calData_L = CalibrationData()
-                calData_L = pickle.load(calFile)
-                calFile.close()
-
-                #copy image for old calibration data
-                transformed_img_R = imCalRGB_R.copy()
-                transformed_img_L = imCalRGB_L.copy()
-
-                transformed_img_R = cv2.warpPerspective(imCalRGB_R, calData_R.transformation_matrix, (800, 800))
-                transformed_img_L = cv2.warpPerspective(imCalRGB_L, calData_L.transformation_matrix, (800, 800))
-
-                draw_R = Draw()
-                draw_L = Draw()
-
-                transformed_img_R = draw_R.drawBoard(transformed_img_R, calData_R)
-                transformed_img_L = draw_L.drawBoard(transformed_img_L, calData_L)
-
-                cv2.imshow("Right Cam", transformed_img_R)
-                cv2.imshow("Left Cam", transformed_img_L)
-
-                test = cv2.waitKey(0)
-                if test == 13:
-                    cv2.destroyAllWindows()
-                    #we are good with the previous calibration data
-                    calibrationComplete = True
-                    return calData_R, calData_L
-                else:
-                    cv2.destroyAllWindows()
-                    calibrationComplete = True
-                    #delete the calibration file and start over
-                    os.remove("calibrationData_R.pkl")
-                    os.remove("calibrationData_L.pkl")
-                    #restart calibration
-                    # calibrate(cam_R, cam_L)
-                    print("restartWasHere")
-
+    #Read calibration file, if exists
+    if os.path.isfile(getCalibrationFile(isRightCalibration)):
+        try:
+            calibrationData = readCalibrationFile(getCalibrationFile(isRightCalibration), camName, calibrationImage)
+        except EOFError as err:
             #corrupted file
-            except EOFError as err:
-                print(err)
+            print(err)
 
-        # start calibration if no calibration data exists
+        if cv2.waitKey(0) == 13:
+            cv2.destroyAllWindows()
+            # we are good with the previous calibration data
+            calibrationComplete = True
         else:
+            cv2.destroyAllWindows()
+            #delete the calibration file and start over
+            os.remove(CALIBRATION_FILE)
+            os.remove("calibrationData_L.pkl")
+            #restart calibration
+            return calibrate(camName, cam, isRightCalibration)
+    else:
+        # start calibration if no calibration data exists
+        calibrationData = CalibrationData()
+        imCal_R = calibrationImage.copy()
 
-            calData_R = CalibrationData()
-            calData_L = CalibrationData()
 
-            imCal_R = imCalRGB_R.copy()
-            imCal_L = imCalRGB_L.copy()
+        calibrationData.points = getTransformationPoints(imCal_R, isRightCalibration)
+        # 13/6: 0 | 6/10: 1 | 10/15: 2 | 15/2: 3 | 2/17: 4 | 17/3: 5 | 3/19: 6 | 19/7: 7 | 7/16: 8 | 16/8: 9 |
+        # 8/11: 10 | 11/14: 11 | 14/9: 12 | 9/12: 13 | 12/5: 14 | 5/20: 15 | 20/1: 16 | 1/18: 17 | 18/4: 18 | 4/13: 19
+        # top, bottom, left, right
+        # 12/9, 2/15, 8/16, 13/4
+        calibrationData.dstpoints = [12, 2, 8, 18]
+        calibrationData.transformation_matrix = manipulateTransformationPoints(imCal_R, calibrationData)
+        cv2.destroyAllWindows()
 
-            calData_R.points = getTransformationPoints(imCal_R, "right")
-            # 13/6: 0 | 6/10: 1 | 10/15: 2 | 15/2: 3 | 2/17: 4 | 17/3: 5 | 3/19: 6 | 19/7: 7 | 7/16: 8 | 16/8: 9 |
-            # 8/11: 10 | 11/14: 11 | 14/9: 12 | 9/12: 13 | 12/5: 14 | 5/20: 15 | 20/1: 16 | 1/18: 17 | 18/4: 18 | 4/13: 19
-            # top, bottom, left, right
-            # 12/9, 2/15, 8/16, 13/4
-            calData_R.dstpoints = [12, 2, 8, 18]
-            calData_R.transformation_matrix = manipulateTransformationPoints(imCal_R, calData_R)
+        print("The dartboard image has now been normalized.")
+        print("")
 
-            calData_L.points = getTransformationPoints(imCal_L, "left")
-            # 12/9, 2/15, 8/16, 13/4
-            calData_L.dstpoints = [12, 2, 8, 18]
-            calData_L.transformation_matrix = manipulateTransformationPoints(imCal_L, calData_L)
-
+        cv2.imshow(winName4, imCal_R)
+        test = cv2.waitKey(0)
+        if test == 13:
+            cv2.destroyWindow(winName4)
             cv2.destroyAllWindows()
 
-            print("The dartboard image has now been normalized.")
-            print("")
-
-            cv2.imshow(winName4, imCal_R)
-            test = cv2.waitKey(0)
-            if test == 13:
-                cv2.destroyWindow(winName4)
-                cv2.destroyAllWindows()
-
-            #write the calibration data to a file
-            calFile = open("calibrationData_R.pkl", "wb")
-            pickle.dump(calData_R, calFile, 0)
-            calFile.close()
-
-            calFile = open("calibrationData_L.pkl", "wb")
-            pickle.dump(calData_L, calFile, 0)
-            calFile.close()
-
-            calibrationComplete = True
-
-            return calData_R, calData_L
-
+        writeToCalibrationFile(calibrationData, getCalibrationFile(isRightCalibration))
 
     cv2.destroyAllWindows()
+    return calibrationData
+
+
+def writeToCalibrationFile(calibrationData, filePath:str):
+    # write the calibration data to a file
+    calFile = open(filePath, "wb")
+    pickle.dump(calibrationData, calFile, 0)
+    calFile.close()
+
+
+def readCalibrationFile(calibrationFilePath: str, camName: str, img):
+    calFile = open(calibrationFilePath, 'rb')
+    calibrationData = CalibrationData()
+    calibrationData = pickle.load(calFile)
+    calFile.close()
+    if DEBUG:
+        transformedImg = img.copy()
+        transformedImg = cv2.warpPerspective(img, calibrationData.transformation_matrix, (800, 800))
+        draw = Draw()
+        transformedImg = draw.drawBoard(transformedImg, calibrationData)
+        cv2.imshow(camName, transformedImg)
+    return calibrationData
+
 
 def calibrateWithCameras(cam_R, cam_L):
-    success = False
+    success = camSuccess = False
     try:
         for i in range(10):
             success, imCalRGB_R = cam_R.read()
@@ -501,7 +474,21 @@ def calibrateWithCameras(cam_R, cam_L):
     if not camSuccess:
         imCalRGB_L = cv2.imread('./calibrationDebug/leftSidePink.png')
         print("backup left")
-    calibrate(imCalRGB_R, imCalRGB_L)
+    calibrate("rightCalibration", imCalRGB_R)
+    calibrate("leftCalibration", imCalRGB_L)
+
+
+def waitForCameraAndShowImg(cam:VideoStream):
+    cv2.namedWindow(cam.camName)
+    while True:
+        grabbed, img = cam.read()
+        if grabbed:
+            cv2.imshow(cam.camName, img)
+        key = cv2.waitKey(20)
+        if key == 27:  # exit on ESC
+            cv2.destroyAllWindows()
+            break
+
 
 if __name__ == '__main__':
     print("Debug calibration")
@@ -509,13 +496,5 @@ if __name__ == '__main__':
     cam1 = VideoStream("WebCam", 1)
     cam1.start()
     cam2.start()
-    cv2.namedWindow(cam1.camName)
-    while True:
-        grabed, img = cam1.read()
-        if grabed:
-                    cv2.imshow(cam1.camName, img)
-        key = cv2.waitKey(20)
-        if key == 27:  # exit on ESC
-            cv2.destroyAllWindows()
-            break
+    waitForCameraAndShowImg(cam1)
     calibrateWithCameras(cam1,cam2)
